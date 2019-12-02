@@ -113,16 +113,16 @@ def create_callbacks(training_model, prediction_model, validation_generator, arg
         )
         callbacks.append(checkpoint)
 
-    # callbacks.append(keras.callbacks.ReduceLROnPlateau(
-    #     monitor='loss',
-    #     factor=0.1,
-    #     patience=2,
-    #     verbose=1,
-    #     mode='auto',
-    #     min_delta=0.0001,
-    #     cooldown=0,
-    #     min_lr=0
-    # ))
+    callbacks.append(keras.callbacks.ReduceLROnPlateau(
+        monitor='loss',
+        factor=0.1,
+        patience=2,
+        verbose=1,
+        mode='auto',
+        min_delta=0.0001,
+        cooldown=0,
+        min_lr=0
+     ))
 
     return callbacks
 
@@ -247,6 +247,7 @@ def parse_args(args):
     parser.add_argument('--weighted-bifpn', help='Use weighted BiFPN', action='store_true')
 
     parser.add_argument('--batch-size', help='Size of the batches.', default=1, type=int)
+    parser.add_argument('--lr', help='Learning rate', default=1e-5, type=float)
     parser.add_argument('--phi', help='Hyper parameter phi', default=0, type=int, choices=(0, 1, 2, 3, 4, 5, 6))
     parser.add_argument('--gpu', help='Id of the GPU to use (as reported by nvidia-smi).')
     parser.add_argument('--num_gpus', help='Number of GPUs to use for parallel processing.', type=int, default=0)
@@ -315,7 +316,7 @@ def main(args=None):
             model.layers[i].trainable = False
 
     # compile model
-    model.compile(optimizer=Adam(lr=1e-3), loss={
+    model.compile(optimizer=Adam(lr=args.lr, clipnorm=0.001), loss={
         'regression': smooth_l1(),
         'classification': focal()
     }, )
