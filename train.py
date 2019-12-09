@@ -34,7 +34,7 @@ from augmentor.misc import MiscEffect
 from model import efficientdet
 from losses import smooth_l1, focal
 from efficientnet import BASE_WEIGHTS_PATH, WEIGHTS_HASHES
-
+from utils.transform import random_transform_generator
 
 def makedirs(path):
     # Intended behavior: try to create the directory,
@@ -166,6 +166,24 @@ def create_generators(args):
             shuffle_groups=False,
             **common_args
         )
+    elif args.dataset_type == 'coco':
+        from generators.coco import CocoGenerator
+        transform_generator = random_transform_generator(flip_x_chance=0.5)
+        train_generator = CocoGenerator(
+            args.coco_path,
+            'train2017',
+            misc_effect=misc_effect,
+            visual_effect=visual_effect,
+            #visual_effect_generator=visual_effect,
+            **common_args
+        )
+
+        validation_generator = CocoGenerator(
+            args.coco_path,
+            'val2017',
+            shuffle_groups=False,
+            **common_args
+        )
     elif args.dataset_type == 'csv':
         from generators.csv_ import CSVGenerator
         train_generator = CSVGenerator(
@@ -244,6 +262,7 @@ def parse_args(args):
 
     parser.add_argument('--snapshot', help='Resume training from a snapshot.')
     parser.add_argument('--freeze-backbone', help='Freeze training of backbone layers.', action='store_true')
+    parser.add_argument('--freeze-bn', help='Freeze training of BatchNormalization layers.', action='store_true')
     parser.add_argument('--weighted-bifpn', help='Use weighted BiFPN', action='store_true')
 
     parser.add_argument('--batch-size', help='Size of the batches.', default=1, type=int)
@@ -292,7 +311,9 @@ def main(args=None):
     train_generator, validation_generator = create_generators(args)
 
     num_classes = train_generator.num_classes()
-    model, prediction_model = efficientdet(args.phi, num_classes=num_classes, weighted_bifpn=args.weighted_bifpn)
+    model, prediction_model = efficientdet(args.phi, num_classes=num_classes,
+                                           weighted_bifpn=args.weighted_bifpn,
+                                           freeze_bn=args.freeze_bn)
 
     # load pretrained weights
     if args.snapshot:
@@ -316,7 +337,7 @@ def main(args=None):
             model.layers[i].trainable = False
 
     # compile model
-    model.compile(optimizer=Adam(lr=args.lr, clipnorm=0.001), loss={
+    model.compile(optimizer=Adam(lr=args.lr * args.batch_size, clipnorm=0.001), loss={
         'regression': smooth_l1(),
         'classification': focal()
     }, )

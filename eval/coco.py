@@ -25,8 +25,9 @@ import cv2
 
 from generators.coco import CocoGenerator
 
+from eval.common import evaluate
 
-def evaluate(generator, model, threshold=0.05):
+def evaluatecoco(generator, model, threshold=0.05):
     """
     Use the pycocotools to evaluate a COCO model on a dataset.
 
@@ -123,10 +124,12 @@ class Evaluate(keras.callbacks.Callback):
         self.active_model = model
         self.threshold = threshold
         self.tensorboard = tensorboard
+        self.weighted_average=False
+        self.verbose = 1
 
         super(Evaluate, self).__init__()
 
-    def on_epoch_end(self, epoch, logs=None):
+    def on_epoch_endi_coco(self, epoch, logs=None):
         logs = logs or {}
 
         coco_tag = ['AP @[ IoU=0.50:0.95 | area=   all | maxDets=100 ]',
@@ -141,7 +144,7 @@ class Evaluate(keras.callbacks.Callback):
                     'AR @[ IoU=0.50:0.95 | area= small | maxDets=100 ]',
                     'AR @[ IoU=0.50:0.95 | area=medium | maxDets=100 ]',
                     'AR @[ IoU=0.50:0.95 | area= large | maxDets=100 ]']
-        coco_eval_stats = evaluate(self.generator, self.model, self.threshold)
+        coco_eval_stats = evaluatecoco(self.generator, self.model, self.threshold)
         if coco_eval_stats is not None and self.tensorboard is not None and self.tensorboard.writer is not None:
             import tensorflow as tf
             summary = tf.Summary()
@@ -151,3 +154,44 @@ class Evaluate(keras.callbacks.Callback):
                 summary_value.tag = '{}. {}'.format(index + 1, coco_tag[index])
                 self.tensorboard.writer.add_summary(summary, epoch)
                 logs[coco_tag[index]] = result
+
+
+    def on_epoch_end(self, epoch, logs=None):
+        logs = logs or {}
+
+        # run evaluation
+        average_precisions = evaluate(
+            self.generator,
+            self.active_model,
+            iou_threshold=0.5,
+            score_threshold=self.threshold,
+            max_detections=100,
+            visualize=False
+        )
+
+        # compute per class average precision
+        total_instances = []
+        precisions = []
+        for label, (average_precision, num_annotations) in average_precisions.items():
+            if self.verbose == 1:
+                print('{:.0f} instances of class'.format(num_annotations),
+                      self.generator.label_to_name(label), 'with average precision: {:.4f}'.format(average_precision))
+            total_instances.append(num_annotations)
+            precisions.append(average_precision)
+        if self.weighted_average:
+            self.mean_ap = sum([a * b for a, b in zip(total_instances, precisions)]) / sum(total_instances)
+        else:
+            self.mean_ap = sum(precisions) / sum(x > 0 for x in total_instances)
+
+        if self.tensorboard is not None and self.tensorboard.writer is not None:
+            import tensorflow as tf
+            summary = tf.Summary()
+            summary_value = summary.value.add()
+            summary_value.simple_value = self.mean_ap
+            summary_value.tag = "mAP"
+            self.tensorboard.writer.add_summary(summary, epoch)
+
+        logs['mAP'] = self.mean_ap
+
+        if self.verbose == 1:
+            print('mAP: {:.4f}'.format(self.mean_ap))

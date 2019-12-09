@@ -323,6 +323,7 @@ class Generator(keras.utils.Sequence):
         self.groups = [[order[x % len(order)] for x in range(i, i + self.batch_size)] for i in
                        range(0, len(order), self.batch_size)]
 
+
     def compute_inputs(self, image_group, annotations_group):
         """
         Compute inputs for the network using an image_group.
