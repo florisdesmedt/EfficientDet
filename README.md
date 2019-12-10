@@ -14,8 +14,29 @@ This project is released under the Apache License. Please take their licenses in
 ### train
 * STEP1: `python3 train.py --snapshot imagenet --phi {0, 1, 2, 3, 4, 5, 6} --freeze-backbone --gpu 0 --random-transform --compute-val-loss --batch-size 32 --steps 1000 pascal datasets/VOC2012` to start training. The init lr is 1e-4.
 * STEP2: `python3 train.py --snapshot xxx.h5 --phi {0, 1, 2, 3, 4, 5, 6} --gpu 0 --random-transform --compute-val-loss --batch-size 32 --steps 1000 pascal datasets/VOC2012` to start training when val mAP can not increase during STEP1. The init lr is 1e-5 and decays to 1e-6 when loss stops dropping down.
+
 ## Evaluate
 * `python3 eval/common.py` to evaluate by specifying model path there.
+
+### Coco 2017
+I performed a training in 2 steps, as described above, on the Coco 2017 dataset. The first step converged around 33 epochs, second step I let run to the end (50 epochs) but converged around epoch 40.
+
+Evaluating on Coco 2017 validation set gave the following accuracy results:
+
+Average Precision (AP) @[ IoU=0.50:0.95 | area= all | maxDets=100 ] = 0.245
+Average Precision (AP) @[ IoU=0.50 | area= all | maxDets=100 ] = 0.390
+Average Precision (AP) @[ IoU=0.75 | area= all | maxDets=100 ] = 0.258
+Average Precision (AP) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.083
+Average Precision (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.276
+Average Precision (AP) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.405
+Average Recall (AR) @[ IoU=0.50:0.95 | area= all | maxDets= 1 ] = 0.242
+Average Recall (AR) @[ IoU=0.50:0.95 | area= all | maxDets= 10 ] = 0.377
+Average Recall (AR) @[ IoU=0.50:0.95 | area= all | maxDets=100 ] = 0.397
+Average Recall (AR) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.113
+Average Recall (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.467
+Average Recall (AR) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.647
+
+This implies this implementation has still a gap in accuracy with the paper implementation (24.5% vs 32.4%).
 
 ## Detect
 A script is avalable to perform detections with a (self) trained model. It could be used as follows:
