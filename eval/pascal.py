@@ -58,6 +58,7 @@ class Evaluate(keras.callbacks.Callback):
         self.verbose = verbose
         self.active_model = model
 
+        self.verbose = False
         super(Evaluate, self).__init__()
 
     def on_epoch_end(self, epoch, logs=None):

@@ -40,9 +40,28 @@ class CocoGenerator(Generator):
         self.coco = COCO(os.path.join(data_dir, 'annotations', 'instances_' + set_name + '.json'))
         self.image_ids = self.coco.getImgIds()
 
+
         self.load_classes()
 
         super(CocoGenerator, self).__init__(**kwargs)
+
+
+        # prune images without annotations
+        to_prune = []
+        for image_id in range(len(self.image_ids)):
+            annotations = self.load_annotations(image_id)
+            if annotations['bboxes'].shape[0] == 0:
+                to_prune.append(image_id)
+
+        for index in reversed(to_prune):
+            del self.image_ids[index]
+            print("PRUNED {}".format(index))
+
+        ## Reinitialise
+        super(CocoGenerator, self).__init__(**kwargs)
+        ###
+
+
 
     def load_classes(self):
         """
