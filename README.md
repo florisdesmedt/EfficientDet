@@ -19,10 +19,15 @@ This project is released under the Apache License. Please take their licenses in
 * The best evaluation results (score_threshold=0.01, mAP<sub>50</sub>) on VOC2007 test are: 
 
 =======
+
 | phi | 0 | 1 |
+
 | ---- | ---- | ---- |
+
 | w/o weighted |  | [0.8029](https://drive.google.com/open?id=1-QkMq56w4dZOTQUnbitF53NKEiNF9F_Q) |
+
 | w/ weighted | [0.7661](https://drive.google.com/open?id=1lM5C5csv-5CBWQwgnVK7vcCFRkfjDELk) |  |
+
 ## Test
 `python3 inference.py` to test your image by specifying image path and model path there. 
 
@@ -36,16 +41,27 @@ I performed a training in 2 steps, as described above, on the Coco 2017 dataset.
 Evaluating on Coco 2017 validation set gave the following accuracy results:
 
 Average Precision (AP) @[ IoU=0.50:0.95 | area= all | maxDets=100 ] = 0.245
+
 Average Precision (AP) @[ IoU=0.50 | area= all | maxDets=100 ] = 0.390
+
 Average Precision (AP) @[ IoU=0.75 | area= all | maxDets=100 ] = 0.258
+
 Average Precision (AP) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.083
+
 Average Precision (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.276
+
 Average Precision (AP) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.405
+
 Average Recall (AR) @[ IoU=0.50:0.95 | area= all | maxDets= 1 ] = 0.242
+
 Average Recall (AR) @[ IoU=0.50:0.95 | area= all | maxDets= 10 ] = 0.377
+
 Average Recall (AR) @[ IoU=0.50:0.95 | area= all | maxDets=100 ] = 0.397
+
 Average Recall (AR) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.113
+
 Average Recall (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.467
+
 Average Recall (AR) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.647
 
 This implies this implementation has still a gap in accuracy with the paper implementation (24.5% vs 32.4%).
